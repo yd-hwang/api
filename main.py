@@ -1,7 +1,18 @@
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 app = FastAPI()
+
+# 모든 GET 요청 차단 (405 Method Not Allowed)
+@app.middleware("http")
+async def block_get_requests(request: Request, call_next):
+    if request.method == "GET":
+        return JSONResponse(
+            status_code=405,
+            content={"detail": "GET method is not allowed. Use POST instead."}
+        )
+    return await call_next(request)
 
 # API KEY 설정 (수업용 고정값)
 API_KEY = "suwon_univ_2026_api_key"
@@ -31,7 +42,3 @@ async def submit_data(
             "course": data.course
         }
     }
-
-@app.get("/")
-async def root():
-    return {"message": "웹 크롤링 수업용 API 서버가 정상 작동 중입니다."}
